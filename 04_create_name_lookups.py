@@ -7,9 +7,14 @@ from path_fns.filepaths import (
     NAMES_RAW_OUT_PATH_GIVEN_NAME,
     NAMES_RAW_OUT_PATH_FAMILY_NAME,
     PERSONS_PROCESSED_ONE_ROW_PER_PERSON,
+    NAMES_PROCESSED_ALT_LOOKUP_DIR,
     NAMES_PROCESSED_GIVEN_NAME_ALT_LOOKUP,
     NAMES_PROCESSED_FAMILY_NAME_ALT_LOOKUP,
 )
+
+from pathlib import Path
+
+Path(NAMES_PROCESSED_ALT_LOOKUP_DIR).mkdir(parents=True, exist_ok=True)
 
 # Use the alternative names in out_data/wikidata/raw/names
 # to create lookups like.  These can then be fed to numpy np.random.choice(names, p=weights)

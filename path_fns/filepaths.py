@@ -33,11 +33,21 @@ PERSONS_PROCESSED_ONE_ROW_PER_PERSON = os.path.join(
     "raw_scraped_one_row_per_person.parquet",
 )
 
-NAMES_PROCESSED_GIVEN_NAME_ALT_LOOKUP = os.path.join(
-    OUT_BASE, WIKIDATA, PROCESSED, "alt_name_lookups", "given_name_lookup.parquet"
+NAMES_PROCESSED_ALT_LOOKUP_DIR = os.path.join(
+    OUT_BASE, 
+    WIKIDATA, 
+    PROCESSED, 
+    "alt_name_lookups"
 )
+
+NAMES_PROCESSED_GIVEN_NAME_ALT_LOOKUP = os.path.join(
+    NAMES_PROCESSED_ALT_LOOKUP_DIR,
+    "given_name_lookup.parquet"
+)
+
 NAMES_PROCESSED_FAMILY_NAME_ALT_LOOKUP = os.path.join(
-    OUT_BASE, WIKIDATA, PROCESSED, "alt_name_lookups", "family_name_lookup.parquet"
+    NAMES_PROCESSED_ALT_LOOKUP_DIR,
+    "family_name_lookup.parquet"
 )
 
 # Transformed master data
