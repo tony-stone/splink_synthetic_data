@@ -27,6 +27,8 @@ sql = f"""
 select *
 from '{PERSONS_PROCESSED_ONE_ROW_PER_PERSON}'
 where list_contains(country_citizen, 'Q145')
+and array_length(given_nameLabel) > 0
+and array_length(family_nameLabel) > 0
 """
 
 pipeline.enqueue_sql(sql, "df")
@@ -47,6 +49,7 @@ pipeline = parse_point_to_lat_lng(
     output_table_name="df_rc_fixed",
     input_table_name="df_bc_fixed",
 )
+
 pipeline = to_lowercase(
     pipeline,
     "humanLabel",
@@ -76,6 +79,12 @@ pipeline = to_lowercase(
     "family_nameLabel",
     output_table_name="df_fnl_fixed",
     input_table_name="df_gnl_fixed",
+)
+pipeline = to_lowercase(
+    pipeline,
+    "full_name_arr",
+    output_table_name="df_fna_fixed",
+    input_table_name="df_fnl_fixed",
 )
 
 df = pipeline.execute_pipeline()
