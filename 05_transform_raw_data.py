@@ -3,6 +3,7 @@ import pyarrow.parquet as pq
 from pathlib import Path
 import os
 from path_fns.filepaths import (
+    TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON_DIR,
     TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON,
     PERSONS_PROCESSED_ONE_ROW_PER_PERSON,
 )
@@ -15,7 +16,7 @@ from transform_master_data.pipeline import SQLPipeline
 
 from transform_master_data.parse_point import parse_point_to_lat_lng
 
-Path(TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON).mkdir(parents=True, exist_ok=True)
+Path(TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON_DIR).mkdir(parents=True, exist_ok=True)
 
 con = duckdb.connect()
 pipeline = SQLPipeline(con)
@@ -25,8 +26,8 @@ sql = f"""
 select *
 from '{PERSONS_PROCESSED_ONE_ROW_PER_PERSON}'
 where array_length(birth_coordinates) > 0
-and  array_length(residence_coordinates) > 0
-limit 20
+and array_length(residence_coordinates) > 0
+and array_length(country_citizen) > 0
 """
 
 pipeline.enqueue_sql(sql, "df")
@@ -52,9 +53,5 @@ pipeline = parse_point_to_lat_lng(
 df = pipeline.execute_pipeline()
 
 
-out_path = os.path.join(
-    TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON, "transformed_master_data.parquet"
-)
-
 df_arrow = df.fetch_arrow_table()
-pq.write_table(df_arrow, out_path)
+pq.write_table(df_arrow, TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON)

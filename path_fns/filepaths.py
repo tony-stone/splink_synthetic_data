@@ -48,6 +48,13 @@ TRANSFORMED_MASTER_DATA = os.path.join(
     TRANSFORMED,
 )
 
-TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON = os.path.join(
-    TRANSFORMED_MASTER_DATA, "one_row_per_person"
+TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON_DIR = os.path.join(
+    TRANSFORMED_MASTER_DATA, 
+    "one_row_per_person"
 )
+
+TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON = os.path.join(
+    TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON_DIR,
+    "transformed_master_data.parquet"
+)
+
