@@ -15,6 +15,7 @@ from transform_master_data.full_name_alternatives_per_person import (
 from transform_master_data.pipeline import SQLPipeline
 
 from transform_master_data.parse_point import parse_point_to_lat_lng
+from transform_master_data.to_lowercase import to_lowercase
 
 Path(TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -46,7 +47,36 @@ pipeline = parse_point_to_lat_lng(
     output_table_name="df_rc_fixed",
     input_table_name="df_bc_fixed",
 )
-
+pipeline = to_lowercase(
+    pipeline,
+    "humanLabel",
+    output_table_name="df_hl_fixed",
+    input_table_name="df_rc_fixed",
+)
+pipeline = to_lowercase(
+    pipeline,
+    "humanAltLabel",
+    output_table_name="df_hal_fixed",
+    input_table_name="df_hl_fixed",
+)
+pipeline = to_lowercase(
+    pipeline,
+    "birth_name",
+    output_table_name="df_bn_fixed",
+    input_table_name="df_hal_fixed",
+)
+pipeline = to_lowercase(
+    pipeline,
+    "given_nameLabel",
+    output_table_name="df_gnl_fixed",
+    input_table_name="df_bn_fixed",
+)
+pipeline = to_lowercase(
+    pipeline,
+    "family_nameLabel",
+    output_table_name="df_fnl_fixed",
+    input_table_name="df_gnl_fixed",
+)
 
 df = pipeline.execute_pipeline()
 
