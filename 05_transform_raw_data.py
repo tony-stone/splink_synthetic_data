@@ -25,9 +25,7 @@ pipeline = SQLPipeline(con)
 sql = f"""
 select *
 from '{PERSONS_PROCESSED_ONE_ROW_PER_PERSON}'
-where array_length(birth_coordinates) > 0
-and array_length(residence_coordinates) > 0
-and array_length(country_citizen) > 0
+where list_contains(country_citizen, 'Q145')
 """
 
 pipeline.enqueue_sql(sql, "df")
