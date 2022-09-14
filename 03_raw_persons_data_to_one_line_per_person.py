@@ -126,29 +126,3 @@ TO '{PERSONS_PROCESSED_ONE_ROW_PER_PERSON}' (FORMAT 'parquet')
 
 
 con.execute(sql)
-
-
-import pandas as pd
-
-pd.options.display.max_columns = 1000
-
-display(
-    con.execute(
-        f"""
-select count(*)
-from '{PERSONS_PROCESSED_ONE_ROW_PER_PERSON}'
-"""
-    ).df()
-)
-
-# USING SAMPLE 0.01% (bernoulli)
-con.execute(
-    f"""
-select *
-from '{PERSONS_PROCESSED_ONE_ROW_PER_PERSON}'
-
-
-
-limit 1
-"""
-).df().T
