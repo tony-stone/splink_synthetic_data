@@ -2,9 +2,9 @@
 set -e
 set -o pipefail
 
-for maxrecs in "50 100"
+for maxrecs in 50 100
 do
-    for mult in "1 0.5 2 5"
+    for mult in 1 0.5 2 5
     do
         for id in {1..10}
         do
