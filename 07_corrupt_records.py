@@ -175,7 +175,6 @@ if __name__ == "__main__":
     sql = f"""
     select *
     from '{in_path}'
-    LIMIT 5
     """
 
     raw_data = con.execute(sql).df()
