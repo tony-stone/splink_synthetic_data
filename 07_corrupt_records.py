@@ -116,7 +116,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="data corruption job runner")
 
     parser.add_argument("--max_corr_recs", type=int)
-    parser.add_argument("--global_prob_mult", type=int)
+    parser.add_argument("--global_prob_mult", type=float)
     parser.add_argument("--set_id", type=int)
     args = parser.parse_args()
     max_corrupted_records = args.max_corr_recs
