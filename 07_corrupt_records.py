@@ -217,7 +217,5 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(output_records)
 
-    print(df)
-
     df.to_parquet(out_path, index=False)
     print(f"written file '{out_path}' with {len(df):,.0f} records")
