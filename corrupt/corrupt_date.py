@@ -32,9 +32,7 @@ def date_corrupt_typo(
         position_function=position_mod_uniform, row_prob=0.5, col_prob=0.5
     )
 
-    dob_ex_year = input_value_as_str[2:]
-    corrupted_dob_ex_year = numpad_corruptor.corrupt_value(dob_ex_year)
-    record_to_modify[output_colname] = input_value_as_str[:2] + corrupted_dob_ex_year
+    record_to_modify[output_colname] = numpad_corruptor.corrupt_value(input_value_as_str)
 
     return record_to_modify
 

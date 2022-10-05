@@ -21,7 +21,7 @@ from corrupt.corrupt_name import (
 
 
 from corrupt.corrupt_date import (
-    date_corrupt_timedelta,
+    date_corrupt_typo,
     date_gen_uncorrupted_record,
 )
 
@@ -108,73 +108,69 @@ config = [
 ]
 
 
-rc = RecordCorruptor()
-
-# DOB
-rc.add_simple_corruption(
-    name="dob_timedelta",
-    corruption_function=date_corrupt_timedelta,
-    args={
-        "input_colname": "dob",
-        "output_colname": "dob",
-        "num_days_delta": 50,
-    },
-    baseline_probability=0.1,
-)
-
-# Given name
-rc.add_simple_corruption(
-    name="given_name_typo",
-    corruption_function=name_typo,
-    args={
-        "input_colname": "given_name", 
-        "output_colname": "given_name"},
-    baseline_probability=0.5,
-)
-
-# Family name
-rc.add_simple_corruption(
-    name="family_name_typo",
-    corruption_function=name_typo,
-    args={
-        "input_colname": "family_name",
-        "output_colname": "family_name"},
-    baseline_probability=0.5,
-)
-
-# Gender
-rc.add_simple_corruption(
-    name="gender_corrupt",
-    corruption_function=gender_corrupt,
-    args={},
-    baseline_probability=0.5,
-)
-
-
-
-max_corrupted_records = 20
-zipf_dist = get_zipf_dist(max_corrupted_records)
-
-
 Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).mkdir(parents=True, exist_ok=True)
 
 
 if __name__ == "__main__":
 
-    # parser = argparse.ArgumentParser(description="data corruption job runner")
+    parser = argparse.ArgumentParser(description="data corruption job runner")
 
-    # parser.add_argument("--start_year", type=int)
-    # parser.add_argument("--num_years", type=int)
-    # args = parser.parse_args()
-    # start_year = args.start_year
-    # num_years = args.num_years
+    parser.add_argument("--max_corr_recs", type=int)
+    parser.add_argument("--global_prob_mult", type=int)
+    parser.add_argument("--set_id", type=int)
+    args = parser.parse_args()
+    max_corrupted_records = args.max_corr_recs
+    global_prob_mult = args.global_prob_mult
+    set_id = args.set_id
 
-    # for year in range(start_year, start_year + num_years + 1):
-
-    out_path = os.path.join(FINAL_CORRUPTED_OUTPUT_FILES_BASE, "all.parquet")
+    out_path = os.path.join(
+        FINAL_CORRUPTED_OUTPUT_FILES_BASE, 
+        f"""max_corruptions-{max_corrupted_records}_prob_mult-{global_prob_mult}_set-{set_id}.parquet"""
+    )
 
     if os.path.exists(out_path):
         exit
+
+    rc = RecordCorruptor()
+
+    # DOB
+    rc.add_simple_corruption(
+        name="dob_corrupt_typo",
+        corruption_function=date_corrupt_typo,
+        args={
+            "input_colname": "dob",
+            "output_colname": "dob",
+        },
+        baseline_probability=0.1 * global_prob_mult,
+    )
+
+    # Given name
+    rc.add_simple_corruption(
+        name="given_name_typo",
+        corruption_function=name_typo,
+        args={
+            "input_colname": "given_name", 
+            "output_colname": "given_name"},
+        baseline_probability=0.5 * global_prob_mult,
+    )
+
+    # Family name
+    rc.add_simple_corruption(
+        name="family_name_typo",
+        corruption_function=name_typo,
+        args={
+            "input_colname": "family_name",
+            "output_colname": "family_name"},
+        baseline_probability=0.5 * global_prob_mult,
+    )
+
+    # Gender
+    rc.add_simple_corruption(
+        name="gender_corrupt",
+        corruption_function=gender_corrupt,
+        args={},
+        baseline_probability=0.5 * global_prob_mult,
+    )
 
     sql = f"""
     select *
@@ -184,6 +180,8 @@ if __name__ == "__main__":
 
     raw_data = con.execute(sql).df()
     records = raw_data.to_dict(orient="records")
+
+    zipf_dist = get_zipf_dist(max_corrupted_records)
 
     output_records = []
     for i, master_input_record in enumerate(records):
@@ -223,4 +221,4 @@ if __name__ == "__main__":
     print(df)
 
     df.to_parquet(out_path, index=False)
-    print(f"written file with {len(df):,.0f} records")
+    print(f"written file '{out_path}' with {len(df):,.0f} records")
