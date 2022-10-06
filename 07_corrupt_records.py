@@ -141,7 +141,7 @@ if __name__ == "__main__":
             "input_colname": "dob",
             "output_colname": "dob",
         },
-        baseline_probability=0.1 * global_prob_mult,
+        baseline_probability=0.01 * global_prob_mult,
     )
 
     # Given name
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         args={
             "input_colname": "given_name", 
             "output_colname": "given_name"},
-        baseline_probability=0.5 * global_prob_mult,
+        baseline_probability=0.05 * global_prob_mult,
     )
 
     # Family name
@@ -161,7 +161,7 @@ if __name__ == "__main__":
         args={
             "input_colname": "family_name",
             "output_colname": "family_name"},
-        baseline_probability=0.5 * global_prob_mult,
+        baseline_probability=0.05 * global_prob_mult,
     )
 
     # Gender
@@ -169,7 +169,7 @@ if __name__ == "__main__":
         name="gender_corrupt",
         corruption_function=gender_corrupt,
         args={},
-        baseline_probability=0.5 * global_prob_mult,
+        baseline_probability=0.005 * global_prob_mult,
     )
 
     sql = f"""
