@@ -8,7 +8,6 @@ import duckdb
 
 
 from corrupt.corruption_functions import (
-    master_record_no_op,
     format_master_data,
     generate_uncorrupted_output_record,
     format_master_record_first_array_item,
@@ -40,10 +39,7 @@ from corrupt.geco_corrupt import get_zipf_dist
 
 
 from corrupt.record_corruptor import (
-    CompositeCorruption,
-    ProbabilityAdjustmentFromLookup,
     RecordCorruptor,
-    ProbabilityAdjustmentFromSQL,
 )
 
 
