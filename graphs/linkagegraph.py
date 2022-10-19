@@ -22,7 +22,10 @@ class LinkageGraph:
         self.edges["match_probability_disp"] = np.floor(self.edges["match_probability"] * 4) + 1
         self.edges["weight"] = self.odds_to_distance(2 ** self.edges["match_weight"])
 
-        g = ig.Graph.DataFrame(self.edges[["unique_id_l", "unique_id_r", "weight", "match_probability_rounded", "match_probability_disp", "false_match"]], directed = False)
+        g = ig.Graph.DataFrame(self.edges[["unique_id_l", "unique_id_r", "weight", "match_probability_rounded", "match_probability_disp", "false_match"]], 
+            directed=False,
+            use_vids=False
+        )
         self.connected_graphs = g.decompose(minelements = self.min_order)
 
     @staticmethod
