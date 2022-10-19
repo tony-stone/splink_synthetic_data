@@ -11,6 +11,8 @@ poetry.lock
 *.parquet
 *.html
 *.json
+*.duckdb
+*.duckdb.wal
 
 .Rproj.user
 .Rhistory
