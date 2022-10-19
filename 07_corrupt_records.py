@@ -201,7 +201,7 @@ if __name__ == "__main__":
             record_to_modify = uncorrupted_output_record.copy()
             record_to_modify["corruptions_applied"] = []
             record_to_modify["id"] = (
-                uncorrupted_output_record["cluster"] + f"_{i+1}"
+                uncorrupted_output_record["cluster"] + str(i+1).rjust(4, '0')
             )
             record_to_modify["uncorrupted_record"] = False
             rc.apply_probability_adjustments(uncorrupted_output_record)

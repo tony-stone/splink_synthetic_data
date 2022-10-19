@@ -1,7 +1,7 @@
 import duckdb
 import pyarrow.parquet as pq
 from pathlib import Path
-import os
+import math
 from path_fns.filepaths import (
     TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON_DIR,
     TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON,
@@ -29,6 +29,9 @@ from '{PERSONS_PROCESSED_ONE_ROW_PER_PERSON}'
 where list_contains(country_citizen, 'Q145')
 and array_length(given_nameLabel) > 0
 and array_length(family_nameLabel) > 0
+and array_length(sex_or_genderLabel) = 1
+and list_extract(sex_or_genderLabel, 1) IN ('male', 'female')
+and array_length(dob) > 0
 """
 
 pipeline.enqueue_sql(sql, "df")
@@ -91,4 +94,22 @@ df = pipeline.execute_pipeline()
 
 
 df_arrow = df.fetch_arrow_table()
-pq.write_table(df_arrow, TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON)
+df_pandas = df_arrow.to_pandas()
+
+# ensure they represent distinct Wikidata entries
+assert max(df_pandas["human"].value_counts()) == 1
+
+# Drop cluster (Wikidata ID)
+df_pandas.drop("human", axis=1)
+
+# Reset index
+df_pandas.reset_index(drop=True, inplace=True)
+
+# Attach new ID
+df_pandas["human"] = df_pandas.index.astype(str)
+
+# Pad new ID to equal length
+num_width = math.ceil(math.log10(len(df_pandas.index)))
+df_pandas["human"] = df_pandas['human'].str.pad(width=num_width, fillchar='0')
+
+df_pandas.to_parquet(TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON, index=False)
