@@ -22,7 +22,7 @@ from pathlib import Path
 
 Path(DEDUPE_OUTPUTS_FILES_BASE).mkdir(parents=True, exist_ok=True)
 
-synthetic_data_filename = "max_corruptions-50_prob_mult-0.5_set-1.parquet"
+synthetic_data_filename = "max_corruptions-50_prob_mult-1.0_set-1.parquet"
 
 synthetic_data_path = os.path.join(
         FINAL_CORRUPTED_OUTPUT_FILES_BASE, 
@@ -31,7 +31,7 @@ synthetic_data_path = os.path.join(
 
 match = re.search("^max_corruptions-(\d+)_prob_mult-(\d+\.?\d*)_set-(\d+)\.parquet$", synthetic_data_filename)
 
-distinct_entities = 20332
+distinct_entities = 20304
 max_dupes = int(match.group(1))
 corruption_probability_multiplier = float(match.group(2))
 set_id = int(match.group(3))
@@ -80,11 +80,11 @@ settings = {
 # Estimate m and u values
 linker.initialise_settings(settings)
 linker.estimate_u_using_random_sampling(target_rows=5e6)
-blocking_rule = "substring(l.given_name, 1, 2)  = substring(r.given_name, 1, 2) and substring(l.family_name, 1, 3)  = substring(r.family_name, 1, 3)"
+blocking_rule = "l.given_name = r.given_name and l.family_name = r.family_name"
 training_session_names = linker.estimate_parameters_using_expectation_maximisation(
     blocking_rule
 )
-blocking_rule = "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.gender = r.gender"
+blocking_rule = "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.dob_y = r.dob_y and l.gender = r.gender"
 training_session_dob = linker.estimate_parameters_using_expectation_maximisation(
     blocking_rule
 )
