@@ -49,21 +49,21 @@ def prepare_df(df):
         if df[col].isnull().sum() > 0:
             raise Exception(f"Nulls present in '{col}' field.") 
 
-    df["dob_split"] = df["dob"].str.strip().str.split("-")
-    df["dob_d"] = df["dob_split"].str[0]
-    df["dob_m"] = df["dob_split"].str[1]
-    df["dob_y"] = df["dob_split"].str[2]
+    df["dob_y"] = df["dob"].str[0:4]
+    df["dob_m"] = df["dob"].str[5:7]
+    df["dob_d"] = df["dob"].str[8:]
+    
 
     for col in [
+        "dob_y",
         "dob_d",
         "dob_m",
-        "dob_y",
     ]:
         df[col] = df[col].str.strip()
         df[col] = df[col].replace(r'^\s*$', None, regex=True)
         df[col] = df[col].fillna(np.nan).replace([np.nan, pd.NA], [None, None])
         if df[col].isnull().sum() > 0:
-            raise Exception(f"Nulls present in '{col}' field.") 
+            raise Exception(f"Nulls present in '{col}' field.")
 
     df.rename({'id': 'unique_id'}, axis=1, inplace=True)
 
