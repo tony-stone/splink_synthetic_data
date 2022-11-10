@@ -1,3 +1,4 @@
+import time
 import re
 
 from splink.duckdb.duckdb_linker import DuckDBLinker
@@ -35,6 +36,9 @@ for synthetic_data_path in Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).glob('*.parqu
     synthetic_data_filename = os.path.basename(
         synthetic_data_path
     )
+
+    print(f"Working on: {synthetic_data_path}")
+    start_time = time.time()
 
     match = re.search("^max_corruptions-(\d+)_prob_mult-(\d+\.?\d*)_set-(\d+)\.parquet$", synthetic_data_filename)
 
@@ -121,3 +125,6 @@ for synthetic_data_path in Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).glob('*.parqu
     )
 
     df_edges.to_parquet(out_path, index=False)
+
+    duration = time.time() - start_time
+    print(f"Finished. Took {duration:.2f}s")
