@@ -37,7 +37,7 @@ for synthetic_data_path in Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).glob('*.parqu
         synthetic_data_path
     )
 
-    print(f"Working on: {synthetic_data_path}")
+    print(f"Working on: {synthetic_data_filename}")
     start_time = time.time()
 
     match = re.search("^max_corruptions-(\d+)_prob_mult-(\d+\.?\d*)_set-(\d+)\.parquet$", synthetic_data_filename)
