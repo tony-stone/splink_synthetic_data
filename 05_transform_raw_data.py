@@ -1,11 +1,12 @@
 import duckdb
 import pyarrow.parquet as pq
 from pathlib import Path
-import math
+import numpy as np
 from path_fns.filepaths import (
     TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON_DIR,
     TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON,
     PERSONS_PROCESSED_ONE_ROW_PER_PERSON,
+    TRANSFORMED_MASTER_DATA_COUNT,
 )
 
 
@@ -26,13 +27,13 @@ pipeline = SQLPipeline(con)
 sql = f"""
 select *
 from '{PERSONS_PROCESSED_ONE_ROW_PER_PERSON}'
-where list_contains(country_citizen, 'Q145')
-and array_length(given_nameLabel) > 0
+where array_length(given_nameLabel) > 0
 and array_length(family_nameLabel) > 0
 and array_length(sex_or_genderLabel) = 1
 and list_extract(sex_or_genderLabel, 1) IN ('male', 'female')
 and array_length(dob) > 0
 """
+# list_contains(country_citizen, 'Q145') and # Citizen of UK
 
 pipeline.enqueue_sql(sql, "df")
 
@@ -99,17 +100,21 @@ df_pandas = df_arrow.to_pandas()
 # ensure they represent distinct Wikidata entries
 assert max(df_pandas["human"].value_counts()) == 1
 
-# Drop cluster (Wikidata ID)
+# Drop Wikidata ID
 df_pandas.drop("human", axis=1)
 
 # Reset index
 df_pandas.reset_index(drop=True, inplace=True)
 
 # Attach new ID
-df_pandas["human"] = df_pandas.index.astype(str)
+df_pandas["human"] = df_pandas.index
 
-# Pad new ID to equal length
-num_width = math.ceil(math.log10(len(df_pandas.index)))
-df_pandas["human"] = df_pandas['human'].str.pad(width=num_width, fillchar='0')
+index_length = len(df_pandas.index)
+rng = np.random.default_rng()
+df_pandas["group_id"] = rng.choice(
+    index_length, 
+    index_length, 
+    replace=False
+    ) % 5
 
 df_pandas.to_parquet(TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON, index=False)

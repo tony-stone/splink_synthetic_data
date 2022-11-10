@@ -124,6 +124,9 @@ if __name__ == "__main__":
         f"""max_corruptions-{max_corrupted_records}_prob_mult-{global_prob_mult}_set-{set_id}.parquet"""
     )
 
+    if max_corrupted_records > 999:
+        exit
+
     if os.path.exists(out_path):
         exit
 
@@ -171,6 +174,7 @@ if __name__ == "__main__":
     sql = f"""
     select *
     from '{in_path}'
+    where group_id = {set_id}
     """
 
     raw_data = con.execute(sql).df()
@@ -201,7 +205,7 @@ if __name__ == "__main__":
             record_to_modify = uncorrupted_output_record.copy()
             record_to_modify["corruptions_applied"] = []
             record_to_modify["id"] = (
-                uncorrupted_output_record["cluster"] + str(i+1).rjust(4, '0')
+                uncorrupted_output_record["cluster"] * 1000 + i + 1
             )
             record_to_modify["uncorrupted_record"] = False
             rc.apply_probability_adjustments(uncorrupted_output_record)

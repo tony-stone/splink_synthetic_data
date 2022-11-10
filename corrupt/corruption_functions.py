@@ -35,7 +35,7 @@ def generate_uncorrupted_output_record(formatted_master_record, config):
             formatted_master_record, record_to_modify=uncorrupted_record
         )
 
-    uncorrupted_record["id"] = formatted_master_record["human"] + "0000"
+    uncorrupted_record["id"] = formatted_master_record["human"] * 1000
 
     return uncorrupted_record
 

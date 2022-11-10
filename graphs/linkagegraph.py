@@ -17,15 +17,31 @@ class LinkageGraph:
         self.min_order = min_order
 
         self.edges = df_edges.loc[(df_edges["match_probability"] >= self.prob_threshold)].copy()
+        self.edges = self.edges.astype({
+            'unique_id_l': 'int64',
+            'unique_id_r': 'int64',
+            'cluster_l': 'int64',
+            'cluster_r': 'int64'
+        })
         self.edges["false_match"] = (self.edges["cluster_l"] != self.edges["cluster_r"])
         self.edges["match_probability_rounded"] = np.round(self.edges["match_probability"], 2)
         self.edges["match_probability_disp"] = np.floor(self.edges["match_probability"] * 4) + 1
         self.edges["weight"] = self.odds_to_distance(2 ** self.edges["match_weight"])
 
-        g = ig.Graph.DataFrame(self.edges[["unique_id_l", "unique_id_r", "weight", "match_probability_rounded", "match_probability_disp", "false_match"]], 
+        g = ig.Graph.DataFrame(
+            self.edges[[
+                "unique_id_l", 
+                "unique_id_r", 
+                "weight", 
+                "match_probability_rounded", 
+                "match_probability_disp", 
+                "false_match"
+                ]], 
             directed=False,
-            use_vids=False
+            use_vids=True,
         )
+
+        g.vs['name'] = g.vs.indices
         self.connected_graphs = g.decompose(minelements = self.min_order)
 
     @staticmethod
@@ -70,7 +86,18 @@ class LinkageGraph:
 
         return modularity
 
+    @staticmethod
+    def get_distinct_entities(vertices: list) -> int:
+        """Returns the number of distinct entities in a graph.
+        This is accomplished by recognising that the vertice
 
+        Args:
+            vertices (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        return len(np.unique(np.floor(np.asarray(vertices) / 1000)))
 
     @staticmethod
     def is_super_bridge(g: ig.Graph, bridge: tuple[int, int], subgraph_min_order: int) -> bool:
@@ -146,21 +173,24 @@ class LinkageGraph:
                         sg.assortativity_degree(),
                         sg.density(),
                         self.edge_betweenness_modularity(sg, weight_field_name),
-                        sum(sg.es.get_attribute_values("false_match"))] #,
-                        #np.unique(pd.DataFrame(sg.vs['name'], columns = ["entities"])["entities"].str.slice(0, np.char.find(sg.vs['name'], "-")))]
+                        sum(sg.es.get_attribute_values("false_match")),
+                        self.get_distinct_entities(sg.vs['name']),
+                        ]
             sg_measure.append(measures)
 
-        df = pd.DataFrame(sg_measure, columns = ["vertices", 
-        "edges", 
-        "super_bridge_count", 
-        "diameter", 
-        "transitivity", 
-        "tri_cluster_coef", 
-        "assortativity_degree", 
-        "density", 
-        "cluster_edge_betweenness_modularity", 
-        "false_match_count"]) #,
-        #"distinct_entities"])
+        df = pd.DataFrame(sg_measure, columns = [
+            "vertices", 
+            "edges", 
+            "super_bridge_count", 
+            "diameter", 
+            "transitivity", 
+            "tri_cluster_coef", 
+            "assortativity_degree", 
+            "density", 
+            "cluster_edge_betweenness_modularity", 
+            "false_match_count",
+            "distinct_entities",
+        ])
 
         df["any_false_matches"] = (df["false_match_count"] > 0)
 
