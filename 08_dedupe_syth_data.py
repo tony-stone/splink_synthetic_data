@@ -22,81 +22,102 @@ from pathlib import Path
 
 Path(DEDUPE_OUTPUTS_FILES_BASE).mkdir(parents=True, exist_ok=True)
 
-synthetic_data_filename = "max_corruptions-50_prob_mult-1.0_set-1.parquet"
+link_settings_dir = os.path.join(
+    DEDUPE_OUTPUTS_FILES_BASE,
+    "settings"
+)
 
-synthetic_data_path = os.path.join(
-        FINAL_CORRUPTED_OUTPUT_FILES_BASE, 
-        synthetic_data_filename
+Path(link_settings_dir).mkdir(parents=True, exist_ok=True)
+
+
+for synthetic_data_path in Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).glob('*.parquet'):
+
+    synthetic_data_filename = os.path.basename(
+        synthetic_data_path
     )
 
-match = re.search("^max_corruptions-(\d+)_prob_mult-(\d+\.?\d*)_set-(\d+)\.parquet$", synthetic_data_filename)
+    match = re.search("^max_corruptions-(\d+)_prob_mult-(\d+\.?\d*)_set-(\d+)\.parquet$", synthetic_data_filename)
 
-distinct_entities = 20304
-max_dupes = int(match.group(1))
-corruption_probability_multiplier = float(match.group(2))
-set_id = int(match.group(3))
+    max_dupes = int(match.group(1))
+    corruption_probability_multiplier = float(match.group(2))
+    set_id = int(match.group(3))
 
-out_path = os.path.join(
-    DEDUPE_OUTPUTS_FILES_BASE, 
-    f"""max_corruptions-{max_dupes}_prob_mult-{corruption_probability_multiplier}_set-{set_id}.parquet"""
-)
+    link_settings_output = os.path.join(
+        link_settings_dir,
+        f"""max_corruptions-{max_dupes}_prob_mult-{corruption_probability_multiplier}_set-{set_id}.json"""
+    )
 
-if os.path.exists(out_path):
-    exit
+    out_path = os.path.join(
+        DEDUPE_OUTPUTS_FILES_BASE, 
+        f"""max_corruptions-{max_dupes}_prob_mult-{corruption_probability_multiplier}_set-{set_id}.parquet"""
+    )
 
-df_records = pd.read_parquet(synthetic_data_path)
-df_clean = prepare_df(df_records)
+    if os.path.exists(out_path):
+        next
 
-linker = DuckDBLinker(df_clean, connection=":temporary:")
+    df_records = pd.read_parquet(synthetic_data_path)
+    df_clean = prepare_df(df_records)
 
-# linkage settings
-settings = {
-    "probability_two_random_records_match": get_prob_two_rnd_recs_are_match(distinct_entities, max_dupes),
-    "link_type": "dedupe_only",
-    "blocking_rules_to_generate_predictions": [
-        "substr(l.given_name, 1, 2) = substr(r.given_name, 1, 2) and substr(l.family_name, 1, 3) = substr(r.family_name, 1, 3)",
-        "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.dob_y = r.dob_y",
-    ],
-    "comparisons": [
-        cl.jaro_winkler_at_thresholds(
-            "given_name", [0.9, 0.7]
-        ),
-        cl.jaro_winkler_at_thresholds(
-            "family_name", [0.9, 0.7]
-        ),
-        cl.exact_match("dob_d"),
-        cl.exact_match("dob_m"),
-        cl.exact_match("dob_y"),
+    distinct_entities = df_clean['cluster'].nunique()
 
-        cl.exact_match("gender"),
-    ],
-    "retain_matching_columns": False,
-    "retain_intermediate_calculation_columns": True,
-    "additional_columns_to_retain": ["cluster"],
-    "max_iterations": 10,
-    "em_convergence": 0.01,
-}
+    linker = DuckDBLinker(df_clean, connection=":temporary:")
 
-# Estimate m and u values
-linker.initialise_settings(settings)
-linker.estimate_u_using_random_sampling(target_rows=5e6)
-blocking_rule = "l.given_name = r.given_name and l.family_name = r.family_name"
-training_session_names = linker.estimate_parameters_using_expectation_maximisation(
-    blocking_rule
-)
-blocking_rule = "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.dob_y = r.dob_y and l.gender = r.gender"
-training_session_dob = linker.estimate_parameters_using_expectation_maximisation(
-    blocking_rule
-)
+    # linkage settings
+    settings = {
+        "probability_two_random_records_match": get_prob_two_rnd_recs_are_match(distinct_entities, max_dupes),
+        "link_type": "dedupe_only",
+        "blocking_rules_to_generate_predictions": [
+            "substr(l.given_name, 1, 2) = substr(r.given_name, 1, 2) and l.family_name = r.family_name",
+            "substr(l.family_name, 1, 2) = substr(r.family_name, 1, 2) and l.given_name = r.given_name",
+            "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.dob_y = r.dob_y and substr(l.given_name, 1, 2) = substr(r.given_name, 1, 2)",
+            "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.dob_y = r.dob_y and substr(l.family_name, 1, 2) = substr(r.family_name, 1, 2)",
+        ],
+        "comparisons": [
+            cl.jaro_winkler_at_thresholds(
+                "given_name", [0.9, 0.7]
+            ),
+            cl.jaro_winkler_at_thresholds(
+                "family_name", [0.9, 0.7]
+            ),
+            cl.exact_match("dob_d"),
+            cl.exact_match("dob_m"),
+            cl.exact_match("dob_y"),
 
-df_predict = linker.predict()
-df_edges = df_predict.as_pandas_dataframe()
+            cl.exact_match("gender"),
+        ],
+        "retain_matching_columns": False,
+        "retain_intermediate_calculation_columns": True,
+        "additional_columns_to_retain": ["cluster"],
+        "max_iterations": 10,
+        "em_convergence": 0.01,
+    }
 
-df_edges = df_edges.drop(
-    [
-        "match_key",
-    ],
-    axis=1,
-)
+    # Estimate m and u values
+    linker.initialise_settings(settings)
+    linker.estimate_u_using_random_sampling(target_rows=1e8)
+    blocking_rule = "l.given_name = r.given_name and l.family_name = r.family_name"
+    training_session_names = linker.estimate_parameters_using_expectation_maximisation(
+        blocking_rule
+    )
+    blocking_rule = "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.dob_y = r.dob_y and substr(l.given_name, 1, 2) = substr(r.given_name, 1, 2)"
+    training_session_dob1 = linker.estimate_parameters_using_expectation_maximisation(
+        blocking_rule
+    )
+    blocking_rule = "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.dob_y = r.dob_y and substr(l.family_name, 1, 2) = substr(r.family_name, 1, 2)"
+    training_session_dob1 = linker.estimate_parameters_using_expectation_maximisation(
+        blocking_rule
+    )
 
-df_edges.to_parquet(out_path, index=False)
+    linker.save_settings_to_json(link_settings_output, overwrite=True)
+
+    df_predict = linker.predict()
+    df_edges = df_predict.as_pandas_dataframe()
+
+    df_edges = df_edges.drop(
+        [
+            "match_key",
+        ],
+        axis=1,
+    )
+
+    df_edges.to_parquet(out_path, index=False)
