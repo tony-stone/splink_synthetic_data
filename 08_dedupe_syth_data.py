@@ -37,7 +37,7 @@ for synthetic_data_path in Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).glob('*.parqu
         synthetic_data_path
     )
 
-    print(f"Working on: {synthetic_data_filename}")
+    print(f"\nWorking on: {synthetic_data_filename}")
     start_time = time.time()
 
     match = re.search("^max_corruptions-(\d+)_prob_mult-(\d+\.?\d*)_set-(\d+)\.parquet$", synthetic_data_filename)
@@ -57,7 +57,8 @@ for synthetic_data_path in Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).glob('*.parqu
     )
 
     if os.path.exists(out_path):
-        next
+        print("Output already exists. Skipping.")
+        continue
 
     df_records = pd.read_parquet(synthetic_data_path)
     df_clean = prepare_df(df_records)
@@ -127,4 +128,4 @@ for synthetic_data_path in Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).glob('*.parqu
     df_edges.to_parquet(out_path, index=False)
 
     duration = time.time() - start_time
-    print(f"Finished. Took {duration:.2f}s")
+    print(f"\nFinished. Took {duration:.2f}s\n")
