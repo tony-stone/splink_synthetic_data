@@ -17,6 +17,7 @@ pyarrow = "9.0.0"
 tabulate = "^0.8.10"
 splink = "^3.4.0"
 igraph = "^0.10.2"
+pycairo = "^1.21.0"
 
 
 [tool.poetry.dev-dependencies]

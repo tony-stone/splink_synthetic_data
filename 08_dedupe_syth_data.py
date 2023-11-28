@@ -109,7 +109,7 @@ for synthetic_data_path in Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).glob('*.parqu
         blocking_rule
     )
     blocking_rule = "l.dob_d = r.dob_d and l.dob_m = r.dob_m and l.dob_y = r.dob_y and substr(l.family_name, 1, 2) = substr(r.family_name, 1, 2)"
-    training_session_dob1 = linker.estimate_parameters_using_expectation_maximisation(
+    training_session_dob2 = linker.estimate_parameters_using_expectation_maximisation(
         blocking_rule
     )
 

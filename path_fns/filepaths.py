@@ -7,6 +7,7 @@ PERSONS = "persons"
 NAMES = "names"
 FINAL_OUPTUTS = "final_outputs"
 DEDUPE_OUTPUTS = "dedupe_outputs"
+GRAPH_OUTPUTS = "graph_outputs"
 
 
 PERSONS_BY_DOD_RAW_OUT_PATH = os.path.join(OUT_BASE, WIKIDATA, RAW, PERSONS, "by_dod")
@@ -64,3 +65,4 @@ FINAL_CORRUPTED_OUTPUT_FILES_BASE = os.path.join(OUT_BASE, WIKIDATA, FINAL_OUPTU
 
 DEDUPE_OUTPUTS_FILES_BASE = os.path.join(OUT_BASE, DEDUPE_OUTPUTS)
 
+GRAPH_OUTPUTS_BASE = os.path.join(OUT_BASE, GRAPH_OUTPUTS)
